@@ -1,0 +1,1948 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#DA291C">
+    <title>المخزون الذكي - Smart Inventory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary-red: #DA291C;
+            --dark-red: #B91C1C;
+            --primary-yellow: #FFC72C;
+            --dark-yellow: #F9A825;
+            --dark: #1a1a1a;
+            --gray: #f5f5f5;
+            --white: #ffffff;
+        }
+
+        body {
+            background: var(--gray);
+            min-height: 100vh;
+            color: var(--dark);
+        }
+
+        /* Header */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
+            color: white;
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(218, 41, 28, 0.3);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--primary-yellow);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .logo-text h1 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin: 0;
+        }
+
+        .logo-text span {
+            font-size: 0.75rem;
+            opacity: 0.9;
+        }
+
+        .user-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        /* Navigation */
+        .app-nav {
+            background: white;
+            padding: 15px;
+            position: sticky;
+            top: 80px;
+            z-index: 999;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow-x: auto;
+        }
+
+        .nav-scroll {
+            display: flex;
+            gap: 10px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .nav-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 15px 20px;
+            background: var(--gray);
+            border: none;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(218, 41, 28, 0.3);
+        }
+
+        .nav-icon {
+            font-size: 24px;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--gray);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            background: var(--primary-yellow);
+            color: var(--dark);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 800;
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .btn-red {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(218, 41, 28, 0.3);
+        }
+
+        .btn-red:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(218, 41, 28, 0.4);
+        }
+
+        .btn-yellow {
+            background: linear-gradient(135deg, var(--primary-yellow) 0%, var(--dark-yellow) 100%);
+            color: var(--dark);
+            box-shadow: 0 8px 20px rgba(255, 199, 44, 0.3);
+        }
+
+        .btn-yellow:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(255, 199, 44, 0.4);
+        }
+
+        .btn-gray {
+            background: var(--gray);
+            color: var(--dark);
+        }
+
+        /* Form Elements */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--dark);
+            font-size: 0.95rem;
+        }
+
+        .input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 3px solid var(--gray);
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: var(--primary-red);
+        }
+
+        /* Lists */
+        .list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: var(--gray);
+            border-radius: 16px;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .list-item:hover {
+            border-color: var(--primary-red);
+            transform: translateX(-5px);
+        }
+
+        .list-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .list-icon {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .list-title {
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+        .list-subtitle {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .delete-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: none;
+            background: var(--primary-red);
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+
+        .delete-btn:hover {
+            transform: scale(1.1) rotate(10deg);
+        }
+
+        /* Date Selector */
+        .date-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .date-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .date-box label {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--primary-red);
+        }
+
+        .date-box select {
+            padding: 14px;
+            border: 3px solid var(--gray);
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            background: white;
+            cursor: pointer;
+        }
+
+        /* Branch Selection */
+        .branch-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .branch-card {
+            background: white;
+            border: 3px solid var(--gray);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .branch-card:hover {
+            border-color: var(--primary-red);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .branch-card.active {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
+            color: white;
+            border-color: var(--primary-red);
+        }
+
+        .branch-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-yellow);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 15px;
+        }
+
+        .branch-card.active .branch-icon {
+            background: white;
+        }
+
+        .branch-name {
+            font-weight: 800;
+            font-size: 1.2rem;
+        }
+
+        /* Items Grid */
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .item-card {
+            background: white;
+            border: 3px solid var(--gray);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .item-card:hover {
+            border-color: var(--primary-red);
+            transform: scale(1.05);
+        }
+
+        .item-card.selected {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
+            color: white;
+            border-color: var(--primary-red);
+        }
+
+        .item-name {
+            font-weight: 800;
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .item-price {
+            color: var(--dark-red);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .item-card.selected .item-price {
+            color: var(--primary-yellow);
+        }
+
+        .qty-badge {
+            background: var(--primary-yellow);
+            color: var(--dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 800;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        /* Selected Panel */
+        .selected-panel {
+            background: var(--dark);
+            color: white;
+            border-radius: 24px;
+            padding: 24px;
+            margin-top: 20px;
+        }
+
+        .selected-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .selected-title {
+            font-weight: 800;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .selected-count {
+            background: var(--primary-yellow);
+            color: var(--dark);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-weight: 800;
+        }
+
+        .selected-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .selected-item-info h4 {
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .selected-item-info span {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .selected-cost {
+            text-align: left;
+        }
+
+        .selected-cost .qty {
+            font-weight: 800;
+            color: var(--primary-yellow);
+        }
+
+        .selected-cost .total {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .total-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .total-row.grand {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--primary-yellow);
+        }
+
+        /* Report Tabs */
+        .report-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .report-tab {
+            flex: 1;
+            padding: 15px;
+            background: var(--gray);
+            border: none;
+            border-radius: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .report-tab.active {
+            background: var(--primary-red);
+            color: white;
+        }
+
+        .report-content {
+            display: none;
+        }
+
+        .report-content.active {
+            display: block;
+        }
+
+        .day-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-right: 5px solid var(--primary-red);
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .day-date {
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--primary-red);
+        }
+
+        .day-total {
+            background: var(--primary-yellow);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 800;
+        }
+
+        .day-branches {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .day-branch {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            background: var(--gray);
+            border-radius: 12px;
+        }
+
+        /* Settings */
+        .settings-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 2px solid var(--gray);
+        }
+
+        .settings-title {
+            font-weight: 800;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: var(--primary-red);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .permission-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: var(--gray);
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+
+        .toggle {
+            width: 60px;
+            height: 30px;
+            background: #ccc;
+            border-radius: 15px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .toggle.active {
+            background: var(--primary-red);
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            right: 2px;
+            transition: all 0.3s;
+        }
+
+        .toggle.active::after {
+            right: 32px;
+        }
+
+        /* File Upload */
+        .file-upload {
+            border: 3px dashed var(--gray);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-upload:hover {
+            border-color: var(--primary-red);
+            background: rgba(218, 41, 28, 0.05);
+        }
+
+        .file-upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 30px 30px 0 0;
+            padding: 30px;
+            animation: slideUp 0.4s;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .qty-selector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .qty-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 20px;
+            border: none;
+            background: var(--gray);
+            font-size: 28px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .qty-btn:hover {
+            background: var(--primary-red);
+            color: white;
+        }
+
+        .qty-value {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary-red);
+            min-width: 100px;
+            text-align: center;
+        }
+
+        /* Section Display */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--dark);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 50px;
+            font-weight: 800;
+            z-index: 3000;
+            opacity: 0;
+            transition: all 0.4s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Login */
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
+            z-index: 5000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-logo {
+            width: 100px;
+            height: 100px;
+            background: var(--primary-yellow);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            margin: 0 auto 30px;
+            animation: bounce 2s infinite;
+        }
+
+        .pin-display {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        .pin-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--gray);
+            transition: all 0.3s;
+        }
+
+        .pin-dot.filled {
+            background: var(--primary-red);
+        }
+
+        .pin-keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .pin-key {
+            aspect-ratio: 1;
+            border: none;
+            border-radius: 20px;
+            background: var(--gray);
+            font-size: 1.5rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pin-key:hover {
+            background: var(--primary-yellow);
+            transform: scale(1.05);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .date-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .items-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .branch-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <div class="login-logo">📦</div>
+            <h2 style="font-size: 1.8rem; margin-bottom: 10px;">المخزون الذكي</h2>
+            <p style="color: #666; margin-bottom: 20px;">أدخل رمز الدخول</p>
+            
+            <div class="pin-display" id="pinDisplay">
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+            </div>
+
+            <div class="pin-keypad">
+                <button class="pin-key" onclick="enterPin(1)">1</button>
+                <button class="pin-key" onclick="enterPin(2)">2</button>
+                <button class="pin-key" onclick="enterPin(3)">3</button>
+                <button class="pin-key" onclick="enterPin(4)">4</button>
+                <button class="pin-key" onclick="enterPin(5)">5</button>
+                <button class="pin-key" onclick="enterPin(6)">6</button>
+                <button class="pin-key" onclick="enterPin(7)">7</button>
+                <button class="pin-key" onclick="enterPin(8)">8</button>
+                <button class="pin-key" onclick="enterPin(9)">9</button>
+                <button class="pin-key" onclick="clearPin()" style="background: var(--primary-red); color: white;">⌫</button>
+                <button class="pin-key" onclick="enterPin(0)">0</button>
+                <button class="pin-key" onclick="viewerLogin()" style="background: var(--primary-yellow);">👁</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="hidden" id="mainApp">
+        
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">📦</div>
+                    <div class="logo-text">
+                        <h1>المخزون الذكي</h1>
+                        <span>Smart Inventory System</span>
+                    </div>
+                </div>
+                <div class="user-badge" id="userBadge">المدير</div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="app-nav">
+            <div class="nav-scroll">
+                <button class="nav-btn active" onclick="showSection('branches', this)">
+                    <span class="nav-icon">🏪</span>
+                    <span>الفروع</span>
+                </button>
+                <button class="nav-btn" onclick="showSection('items', this)">
+                    <span class="nav-icon">📦</span>
+                    <span>الأصناف</span>
+                </button>
+                <button class="nav-btn" onclick="showSection('withdraw', this)">
+                    <span class="nav-icon">📤</span>
+                    <span>السحب</span>
+                </button>
+                <button class="nav-btn" onclick="showSection('reports', this)">
+                    <span class="nav-icon">📊</span>
+                    <span>التقارير</span>
+                </button>
+                <button class="nav-btn" onclick="showSection('settings', this)">
+                    <span class="nav-icon">⚙️</span>
+                    <span>الإعدادات</span>
+                </button>
+            </div>
+        </nav>
+
+        <main class="container">
+
+            <!-- Branches Section -->
+            <section id="branches" class="section active">
+                <div class="card admin-only">
+                    <div class="card-header">
+                        <h2 class="card-title">➕ إضافة فرع جديد</h2>
+                    </div>
+                    <div class="input-group">
+                        <label class="label">اسم الفرع</label>
+                        <input type="text" id="newBranchName" class="input" placeholder="مثال: فرع الرياض الرئيسي">
+                    </div>
+                    <button class="btn btn-red" onclick="addBranch()">
+                        <span>➕</span>
+                        <span>إضافة الفرع</span>
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🏪 الفروع المسجلة</h2>
+                        <span class="badge" id="branchesCount">0</span>
+                    </div>
+                    <div class="list" id="branchesList"></div>
+                </div>
+            </section>
+
+            <!-- Items Section -->
+            <section id="items" class="section">
+                <div class="card admin-only">
+                    <div class="card-header">
+                        <h2 class="card-title">➕ إضافة صنف يدوياً</h2>
+                    </div>
+                    <div class="input-group">
+                        <label class="label">اسم الصنف</label>
+                        <input type="text" id="newItemName" class="input" placeholder="مثال: دجاج فيليه">
+                    </div>
+                    <div class="input-group">
+                        <label class="label">سعر الوحدة (ريال)</label>
+                        <input type="number" id="newItemPrice" class="input" step="0.01" placeholder="0.00">
+                    </div>
+                    <button class="btn btn-red" onclick="addItem()">
+                        <span>💾</span>
+                        <span>حفظ الصنف</span>
+                    </button>
+                </div>
+
+                <div class="card admin-only">
+                    <div class="card-header">
+                        <h2 class="card-title">📥 استيراد من Excel</h2>
+                    </div>
+                    <div class="file-upload" onclick="document.getElementById('excelItems').click()">
+                        <div class="file-upload-icon">📊</div>
+                        <h3>اضغط لاختيار ملف Excel</h3>
+                        <p style="color: #666; margin-top: 10px;">الأعمدة: اسم الصنف - السعر</p>
+                    </div>
+                    <input type="file" id="excelItems" class="hidden" accept=".xlsx,.xls" onchange="importItemsExcel(this)">
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📋 الأصناف المسجلة</h2>
+                        <span class="badge" id="itemsCount">0</span>
+                    </div>
+                    <div class="list" id="itemsList"></div>
+                </div>
+            </section>
+
+            <!-- Withdraw Section -->
+            <section id="withdraw" class="section">
+                
+                <!-- Step 1: Date -->
+                <div id="wStep1" class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📅 اختر التاريخ</h2>
+                        <span class="badge">الخطوة 1</span>
+                    </div>
+                    
+                    <div class="date-grid">
+                        <div class="date-box">
+                            <label>اليوم</label>
+                            <select id="wDay"></select>
+                        </div>
+                        <div class="date-box">
+                            <label>الشهر</label>
+                            <select id="wMonth"></select>
+                        </div>
+                        <div class="date-box">
+                            <label>السنة</label>
+                            <select id="wYear"></select>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-yellow" onclick="confirmWDate()">
+                        التالي ←
+                    </button>
+                </div>
+
+                <!-- Step 2: Branch -->
+                <div id="wStep2" class="card hidden">
+                    <div class="card-header">
+                        <h2 class="card-title">🏪 اختر الفرع</h2>
+                        <span class="badge">الخطوة 2</span>
+                    </div>
+                    
+                    <div class="branch-grid" id="wBranchList"></div>
+                    
+                    <button class="btn btn-gray" onclick="backToWDate()">
+                        → تغيير التاريخ
+                    </button>
+                </div>
+
+                <!-- Step 3: Items -->
+                <div id="wStep3" class="hidden">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">🛒 اختر الأصناف</h2>
+                            <span class="badge" id="wDateDisplay">-</span>
+                        </div>
+                        
+                        <div class="items-grid" id="wItemsGrid"></div>
+                    </div>
+
+                    <div id="wSelectedPanel" class="selected-panel hidden">
+                        <div class="selected-header">
+                            <div class="selected-title">
+                                <span>✓</span>
+                                <span>الأصناف المختارة</span>
+                                <span class="selected-count" id="wSelectedCount">0</span>
+                            </div>
+                        </div>
+                        <div id="wSelectedList"></div>
+                        
+                        <div class="total-section">
+                            <div class="total-row">
+                                <span>إجمالي الكمية:</span>
+                                <span id="wTotalQty">0</span>
+                            </div>
+                            <div class="total-row grand">
+                                <span>الإجمالي الكلي:</span>
+                                <span id="wGrandTotal">0 ريال</span>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-yellow" onclick="saveWithdrawal()">
+                            <span>💾</span>
+                            <span>حفظ العملية</span>
+                        </button>
+                        <button class="btn btn-gray" onclick="resetWithdrawal()">
+                            إلغاء
+                        </button>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Reports Section -->
+            <section id="reports" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📊 عرض التقارير</h2>
+                    </div>
+
+                    <div class="report-tabs">
+                        <button class="report-tab active" onclick="showReportTab('daily', this)">📅 بالأيام</button>
+                        <button class="report-tab" onclick="showReportTab('total', this)">📈 الإجمالي</button>
+                    </div>
+
+                    <!-- Daily Report -->
+                    <div id="reportDaily" class="report-content active">
+                        <div class="input-group">
+                            <label class="label">اختر التاريخ</label>
+                            <input type="date" id="reportDate" class="input" onchange="loadDailyReport()">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label class="label">اختر الفرع (اختياري)</label>
+                            <select id="reportBranchFilter" class="input" onchange="loadDailyReport()">
+                                <option value="">جميع الفروع</option>
+                            </select>
+                        </div>
+
+                        <div id="dailyReportResult"></div>
+                    </div>
+
+                    <!-- Total Report -->
+                    <div id="reportTotal" class="report-content">
+                        <div class="input-group">
+                            <label class="label">من تاريخ</label>
+                            <input type="date" id="totalFrom" class="input">
+                        </div>
+                        <div class="input-group">
+                            <label class="label">إلى تاريخ</label>
+                            <input type="date" id="totalTo" class="input">
+                        </div>
+                        <button class="btn btn-red" onclick="loadTotalReport()">
+                            عرض الإجمالي
+                        </button>
+                        <div id="totalReportResult" style="margin-top: 20px;"></div>
+                    </div>
+
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid var(--gray);">
+                        <button class="btn btn-yellow" onclick="exportToExcel()">
+                            <span>📊</span>
+                            <span>تصدير لـ Excel</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🔐 إعدادات الدخول</h2>
+                    </div>
+
+                    <div class="settings-card">
+                        <div class="settings-title">🔑 تغيير رمز الدخول</div>
+                        <div class="input-group">
+                            <label class="label">الرمز الجديد (4 أرقام)</label>
+                            <input type="password" id="newPin" class="input" maxlength="4" placeholder="••••">
+                        </div>
+                        <button class="btn btn-red" onclick="changePin()">
+                            حفظ الرمز
+                        </button>
+                    </div>
+
+                    <div class="settings-card">
+                        <div class="settings-title">👥 صلاحيات المستخدمين</div>
+                        
+                        <div class="permission-item">
+                            <div>
+                                <div style="font-weight: 700;">المدير</div>
+                                <div style="font-size: 0.9rem; color: #666;">إضافة وحذف وتعديل</div>
+                            </div>
+                            <div class="toggle active" onclick="togglePermission(this, 'admin')"></div>
+                        </div>
+
+                        <div class="permission-item">
+                            <div>
+                                <div style="font-weight: 700;">الموظفين</div>
+                                <div style="font-size: 0.9rem; color: #666;">عرض فقط</div>
+                            </div>
+                            <div class="toggle" onclick="togglePermission(this, 'viewer')"></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <div class="settings-title">💾 النسخ الاحتياطي</div>
+                        <button class="btn btn-yellow" onclick="exportAllData()">
+                            <span>📥</span>
+                            <span>تصدير جميع البيانات</span>
+                        </button>
+                        <button class="btn btn-gray" onclick="document.getElementById('importAll').click()" style="margin-top: 10px;">
+                            <span>📤</span>
+                            <span>استيراد البيانات</span>
+                        </button>
+                        <input type="file" id="importAll" class="hidden" accept=".json" onchange="importAllData(this)">
+                    </div>
+
+                    <div class="settings-card" style="border-color: var(--primary-red);">
+                        <div class="settings-title" style="color: var(--primary-red);">⚠️ منطقة الخطر</div>
+                        <button class="btn btn-red" onclick="clearAllData()">
+                            <span>🗑️</span>
+                            <span>مسح جميع البيانات (بداية شهر جديد)</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Quantity Modal -->
+    <div class="modal" id="qtyModal">
+        <div class="modal-content">
+            <div style="text-align: center; margin-bottom: 25px;">
+                <div style="font-size: 60px; margin-bottom: 15px;" id="qtyModalIcon">📦</div>
+                <h3 style="font-size: 1.4rem; font-weight: 800;" id="qtyModalName">الكمية</h3>
+                <p style="color: var(--primary-red); font-weight: 700; margin-top: 5px;" id="qtyModalPrice">0 ريال</p>
+            </div>
+            
+            <div class="qty-selector">
+                <button class="qty-btn" onclick="changeQty(-0.25)">−</button>
+                <div class="qty-value" id="qtyModalValue">1</div>
+                <button class="qty-btn" onclick="changeQty(0.25)">+</button>
+            </div>
+
+            <div style="text-align: center; margin: 20px 0; padding: 15px; background: var(--gray); border-radius: 15px;">
+                <div style="font-size: 0.9rem; color: #666;">الإجمالي</div>
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary-red);" id="qtyModalTotal">0 ريال</div>
+            </div>
+
+            <button class="btn btn-red" onclick="confirmQty()">تأكيد</button>
+            <button class="btn btn-gray" onclick="closeQtyModal()">إلغاء</button>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <span>✓</span>
+        <span id="toastMsg">تم بنجاح</span>
+    </div>
+
+    <script>
+        // Data Structure
+        let appData = {
+            pin: '1234',
+            userMode: 'admin',
+            branches: [],
+            items: [],
+            withdrawals: []
+        };
+
+        let currentW = {
+            date: null,
+            branch: null,
+            items: {}
+        };
+
+        let tempQty = 1;
+        let tempItem = null;
+        let enteredPin = '';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            initDateSelectors();
+            populateReportBranches();
+        });
+
+        function loadData() {
+            const saved = localStorage.getItem('smartInventory');
+            if (saved) {
+                appData = JSON.parse(saved);
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('smartInventory', JSON.stringify(appData));
+        }
+
+        // Login System
+        function enterPin(num) {
+            if (enteredPin.length < 4) {
+                enteredPin += num;
+                updatePinDisplay();
+                
+                if (enteredPin.length === 4) {
+                    setTimeout(checkPin, 300);
+                }
+            }
+        }
+
+        function clearPin() {
+            enteredPin = '';
+            updatePinDisplay();
+        }
+
+        function updatePinDisplay() {
+            const dots = document.querySelectorAll('.pin-dot');
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('filled', i < enteredPin.length);
+            });
+        }
+
+        function checkPin() {
+            if (enteredPin === appData.pin) {
+                appData.userMode = 'admin';
+                enterApp();
+            } else {
+                showToast('رمز خاطئ!');
+                enteredPin = '';
+                updatePinDisplay();
+            }
+        }
+
+        function viewerLogin() {
+            appData.userMode = 'viewer';
+            enterApp();
+        }
+
+        function enterApp() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            
+            if (appData.userMode === 'viewer') {
+                document.getElementById('userBadge').textContent = 'عرض فقط';
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+            }
+            
+            renderBranches();
+            renderItems();
+        }
+
+        // Navigation
+        function showSection(sectionId, btn) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(sectionId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // Date Selectors
+        function initDateSelectors() {
+            const daySel = document.getElementById('wDay');
+            const monthSel = document.getElementById('wMonth');
+            const yearSel = document.getElementById('wYear');
+            
+            for (let i = 1; i <= 31; i++) {
+                daySel.innerHTML += `<option value="${i.toString().padStart(2,'0')}">${i}</option>`;
+            }
+            
+            const months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+            months.forEach((m, i) => {
+                monthSel.innerHTML += `<option value="${(i+1).toString().padStart(2,'0')}">${m}</option>`;
+            });
+            
+            const currentYear = new Date().getFullYear();
+            for (let i = currentYear - 2; i <= currentYear + 2; i++) {
+                yearSel.innerHTML += `<option value="${i}">${i}</option>`;
+            }
+            
+            const today = new Date();
+            daySel.value = today.getDate().toString().padStart(2,'0');
+            monthSel.value = (today.getMonth() + 1).toString().padStart(2,'0');
+            yearSel.value = today.getFullYear();
+            
+            document.getElementById('reportDate').valueAsDate = today;
+            document.getElementById('totalFrom').valueAsDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            document.getElementById('totalTo').valueAsDate = today;
+        }
+
+        function populateReportBranches() {
+            const sel = document.getElementById('reportBranchFilter');
+            sel.innerHTML = '<option value="">جميع الفروع</option>' + 
+                appData.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+        }
+
+        // Branches
+        function addBranch() {
+            const name = document.getElementById('newBranchName').value.trim();
+            if (!name) return showToast('أدخل اسم الفرع');
+            
+            appData.branches.push({
+                id: Date.now(),
+                name: name
+            });
+            
+            saveData();
+            document.getElementById('newBranchName').value = '';
+            renderBranches();
+            populateReportBranches();
+            showToast('تم إضافة الفرع');
+        }
+
+        function deleteBranch(id) {
+            if (!confirm('حذف الفرع؟')) return;
+            appData.branches = appData.branches.filter(b => b.id !== id);
+            saveData();
+            renderBranches();
+            populateReportBranches();
+            showToast('تم الحذف');
+        }
+
+        function renderBranches() {
+            const container = document.getElementById('branchesList');
+            document.getElementById('branchesCount').textContent = appData.branches.length;
+            
+            if (appData.branches.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; padding: 30px;">لا توجد فروع مضافة</p>';
+                return;
+            }
+
+            container.innerHTML = appData.branches.map(b => `
+                <div class="list-item">
+                    <div class="list-info">
+                        <div class="list-icon">🏪</div>
+                        <div>
+                            <div class="list-title">${b.name}</div>
+                        </div>
+                    </div>
+                    ${appData.userMode === 'admin' ? `<button class="delete-btn" onclick="deleteBranch(${b.id})">🗑</button>` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Items
+        function addItem() {
+            const name = document.getElementById('newItemName').value.trim();
+            const price = parseFloat(document.getElementById('newItemPrice').value);
+            
+            if (!name || !price) return showToast('أكمل البيانات');
+            
+            appData.items.push({
+                id: Date.now(),
+                name: name,
+                price: price
+            });
+            
+            saveData();
+            document.getElementById('newItemName').value = '';
+            document.getElementById('newItemPrice').value = '';
+            renderItems();
+            showToast('تم إضافة الصنف');
+        }
+
+        function deleteItem(id) {
+            if (!confirm('حذف الصنف؟')) return;
+            appData.items = appData.items.filter(i => i.id !== id);
+            saveData();
+            renderItems();
+            showToast('تم الحذف');
+        }
+
+        function renderItems() {
+            const container = document.getElementById('itemsList');
+            document.getElementById('itemsCount').textContent = appData.items.length;
+            
+            if (appData.items.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; padding: 30px;">لا توجد أصناف مضافة</p>';
+                return;
+            }
+
+            container.innerHTML = appData.items.map(item => `
+                <div class="list-item">
+                    <div class="list-info">
+                        <div class="list-icon">📦</div>
+                        <div>
+                            <div class="list-title">${item.name}</div>
+                            <div class="list-subtitle">${item.price.toFixed(2)} ريال</div>
+                        </div>
+                    </div>
+                    ${appData.userMode === 'admin' ? `<button class="delete-btn" onclick="deleteItem(${item.id})">🗑</button>` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Excel Import
+        function importItemsExcel(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(sheet, {header: 1});
+                    
+                    let added = 0;
+                    rows.forEach((row, i) => {
+                        if (i === 0) return;
+                        if (row[0] && row[1]) {
+                            appData.items.push({
+                                id: Date.now() + Math.random(),
+                                name: row[0].toString().trim(),
+                                price: parseFloat(row[1]) || 0
+                            });
+                            added++;
+                        }
+                    });
+                    
+                    saveData();
+                    renderItems();
+                    showToast(`تم إضافة ${added} صنف`);
+                } catch (err) {
+                    showToast('خطأ في قراءة الملف');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            input.value = '';
+        }
+
+        // Withdrawal
+        function confirmWDate() {
+            const day = document.getElementById('wDay').value;
+            const month = document.getElementById('wMonth').value;
+            const year = document.getElementById('wYear').value;
+            
+            currentW.date = `${year}-${month}-${day}`;
+            
+            document.getElementById('wStep1').classList.add('hidden');
+            document.getElementById('wStep2').classList.remove('hidden');
+            renderWBranches();
+        }
+
+        function backToWDate() {
+            document.getElementById('wStep2').classList.add('hidden');
+            document.getElementById('wStep1').classList.remove('hidden');
+        }
+
+        function renderWBranches() {
+            const container = document.getElementById('wBranchList');
+            
+            if (appData.branches.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; grid-column: 1/-1;">أضف فروعاً أولاً</p>';
+                return;
+            }
+
+            container.innerHTML = appData.branches.map(b => `
+                <div class="branch-card" onclick="selectWBranch(${b.id}, '${b.name}')">
+                    <div class="branch-icon">🏪</div>
+                    <div class="branch-name">${b.name}</div>
+                </div>
+            `).join('');
+        }
+
+        function selectWBranch(id, name) {
+            currentW.branch = id;
+            document.getElementById('wDateDisplay').textContent = `${name} | ${currentW.date}`;
+            
+            document.getElementById('wStep2').classList.add('hidden');
+            document.getElementById('wStep3').classList.remove('hidden');
+            renderWItems();
+        }
+
+        function renderWItems() {
+            const container = document.getElementById('wItemsGrid');
+            
+            if (appData.items.length === 0) {
+                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">أضف أصنافاً أولاً</p>';
+                return;
+            }
+
+            container.innerHTML = appData.items.map(item => {
+                const selected = currentW.items[item.id];
+                return `
+                    <div class="item-card ${selected ? 'selected' : ''}" onclick="openQtyModal(${item.id})">
+                        <div class="item-name">${item.name}</div>
+                        <div class="item-price">${item.price.toFixed(2)} ريال</div>
+                        ${selected ? `<div class="qty-badge">${selected.qty}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Quantity Modal
+        function openQtyModal(itemId) {
+            const item = appData.items.find(i => i.id === itemId);
+            if (!item) return;
+            
+            tempItem = item;
+            const existing = currentW.items[itemId];
+            tempQty = existing ? existing.qty : 1;
+            
+            document.getElementById('qtyModalIcon').textContent = '📦';
+            document.getElementById('qtyModalName').textContent = item.name;
+            document.getElementById('qtyModalPrice').textContent = item.price.toFixed(2) + ' ريال';
+            document.getElementById('qtyModalValue').textContent = tempQty;
+            updateQtyTotal();
+            
+            document.getElementById('qtyModal').classList.add('active');
+        }
+
+        function changeQty(delta) {
+            tempQty += delta;
+            if (tempQty < 0.25) tempQty = 0.25;
+            if (tempQty > 999) tempQty = 999;
+            document.getElementById('qtyModalValue').textContent = tempQty;
+            updateQtyTotal();
+        }
+
+        function updateQtyTotal() {
+            const total = tempItem.price * tempQty;
+            document.getElementById('qtyModalTotal').textContent = total.toFixed(2) + ' ريال';
+        }
+
+        function confirmQty() {
+            if (tempQty <= 0) {
+                delete currentW.items[tempItem.id];
+            } else {
+                currentW.items[tempItem.id] = {
+                    qty: tempQty,
+                    price: tempItem.price,
+                    total: tempItem.price * tempQty
+                };
+            }
+            closeQtyModal();
+            renderWItems();
+            renderWSelected();
+        }
+
+        function closeQtyModal() {
+            document.getElementById('qtyModal').classList.remove('active');
+        }
+
+        function renderWSelected() {
+            const container = document.getElementById('wSelectedPanel');
+            const list = document.getElementById('wSelectedList');
+            const items = Object.entries(currentW.items);
+            
+            document.getElementById('wSelectedCount').textContent = items.length;
+            
+            if (items.length === 0) {
+                container.classList.add('hidden');
+                return;
+            }
+            
+            container.classList.remove('hidden');
+            
+            let totalQty = 0;
+            let grandTotal = 0;
+            
+            list.innerHTML = items.map(([id, data]) => {
+                const item = appData.items.find(i => i.id == id);
+                totalQty += data.qty;
+                grandTotal += data.total;
+                
+                return `
+                    <div class="selected-item">
+                        <div class="selected-item-info">
+                            <h4>${item.name}</h4>
+                            <span>${data.price.toFixed(2)} × ${data.qty}</span>
+                        </div>
+                        <div class="selected-cost">
+                            <div class="qty">${data.qty}</div>
+                            <div class="total">${data.total.toFixed(2)} ريال</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('wTotalQty').textContent = totalQty.toFixed(2);
+            document.getElementById('wGrandTotal').textContent = grandTotal.toFixed(2) + ' ريال';
+        }
+
+        function resetWithdrawal() {
+            currentW = { date: null, branch: null, items: {} };
+            document.getElementById('wStep3').classList.add('hidden');
+            document.getElementById('wStep1').classList.remove('hidden');
+            document.getElementById('wSelectedPanel').classList.add('hidden');
+        }
+
+        function saveWithdrawal() {
+            const items = Object.entries(currentW.items);
+            if (items.length === 0) return showToast('اختر أصنافاً');
+            
+            let grandTotal = 0;
+            const withdrawalItems = items.map(([id, data]) => {
+                grandTotal += data.total;
+                return {
+                    itemId: parseInt(id),
+                    qty: data.qty,
+                    price: data.price,
+                    total: data.total
+                };
+            });
+            
+            appData.withdrawals.push({
+                id: Date.now(),
+                date: currentW.date,
+                branchId: currentW.branch,
+                items: withdrawalItems,
+                grandTotal: grandTotal
+            });
+            
+            saveData();
+            showToast('✅ تم حفظ العملية');
+            resetWithdrawal();
+        }
+
+        // Reports
+        function showReportTab(tab, btn) {
+            document.querySelectorAll('.report-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.report-tab').forEach(t => t.classList.remove('active'));
+            
+            document.getElementById('report' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function loadDailyReport() {
+            const date = document.getElementById('reportDate').value;
+            const branchId = document.getElementById('reportBranchFilter').value;
+            
+            if (!date) return;
+            
+            let withdrawals = appData.withdrawals.filter(w => w.date === date);
+            if (branchId) withdrawals = withdrawals.filter(w => w.branchId == branchId);
+            
+            const container = document.getElementById('dailyReportResult');
+            
+            if (withdrawals.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; padding: 30px;">لا توجد عمليات في هذا التاريخ</p>';
+                return;
+            }
+            
+            container.innerHTML = withdrawals.map(w => {
+                const branch = appData.branches.find(b => b.id === w.branchId);
+                return `
+                    <div class="day-card">
+                        <div class="day-header">
+                            <span class="day-date">${branch ? branch.name : 'فرع محذوف'}</span>
+                            <span class="day-total">${w.grandTotal.toFixed(2)} ريال</span>
+                        </div>
+                        <div class="day-branches">
+                            ${w.items.map(item => {
+                                const itemData = appData.items.find(i => i.id === item.itemId);
+                                return `
+                                    <div class="day-branch">
+                                        <span>${itemData ? itemData.name : 'صنف محذوف'}</span>
+                                        <span style="font-weight: 700;">${item.qty} × ${item.price.toFixed(2)} = ${item.total.toFixed(2)} ريال</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function loadTotalReport() {
+            const from = document.getElementById('totalFrom').value;
+            const to = document.getElementById('totalTo').value;
+            
+            if (!from || !to) return;
+            
+            const withdrawals = appData.withdrawals.filter(w => w.date >= from && w.date <= to);
+            
+            const branchTotals = {};
+            withdrawals.forEach(w => {
+                if (!branchTotals[w.branchId]) {
+                    branchTotals[w.branchId] = { total: 0, count: 0 };
+                }
+                branchTotals[w.branchId].total += w.grandTotal;
+                branchTotals[w.branchId].count += 1;
+            });
+            
+            const container = document.getElementById('totalReportResult');
+            
+            if (Object.keys(branchTotals).length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999;">لا توجد بيانات</p>';
+                return;
+            }
+            
+            let grandTotal = 0;
+            
+            container.innerHTML = `
+                <div class="card">
+                    <div class="list">
+                        ${Object.entries(branchTotals).map(([branchId, data]) => {
+                            const branch = appData.branches.find(b => b.id == branchId);
+                            grandTotal += data.total;
+                            return `
+                                <div class="list-item">
+                                    <div class="list-info">
+                                        <div class="list-icon">🏪</div>
+                                        <div>
+                                            <div class="list-title">${branch ? branch.name : 'فرع محذوف'}</div>
+                                            <div class="list-subtitle">${data.count} عملية</div>
+                                        </div>
+                                    </div>
+                                    <div style="font-weight: 800; color: var(--primary-red); font-size: 1.2rem;">
+                                        ${data.total.toFixed(2)} ريال
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 3px solid var(--primary-yellow); text-align: center;">
+                        <div style="font-size: 0.9rem; color: #666;">الإجمالي الكلي</div>
+                        <div style="font-size: 2rem; font-weight: 800; color: var(--primary-red);">${grandTotal.toFixed(2)} ريال</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Excel Export
+        function exportToExcel() {
+            const data = appData.withdrawals.flatMap(w => {
+                const branch = appData.branches.find(b => b.id === w.branchId);
+                return w.items.map(item => {
+                    const itemData = appData.items.find(i => i.id === item.itemId);
+                    return {
+                        'اسم الصنف': itemData ? itemData.name : 'محذوف',
+                        'اسم الفرع': branch ? branch.name : 'محذوف',
+                        'الكمية': item.qty,
+                        'السعر': item.price,
+                        'الإجمالي': item.total,
+                        'التاريخ': w.date
+                    };
+                });
+            });
+            
+            if (data.length === 0) return showToast('لا توجد بيانات للتصدير');
+            
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'المخزون');
+            XLSX.writeFile(wb, `المخزون_الذكي_${new Date().toISOString().split('T')[0]}.xlsx`);
+            
+            showToast('تم تصدير الملف');
+        }
+
+        // Settings
+        function changePin() {
+            const newPin = document.getElementById('newPin').value;
+            if (newPin.length !== 4 || !/^\d+$/.test(newPin)) {
+                return showToast('الرمز يجب أن يكون 4 أرقام');
+            }
+            appData.pin = newPin;
+            saveData();
+            showToast('تم تغيير الرمز');
+            document.getElementById('newPin').value = '';
+        }
+
+        function togglePermission(toggle, type) {
+            toggle.classList.toggle('active');
+        }
+
+        function exportAllData() {
+            const dataStr = JSON.stringify(appData, null, 2);
+            const blob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            showToast('تم تصدير النسخة الاحتياطية');
+        }
+
+        function importAllData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (confirm('استيراد البيانات سيحل محل البيانات الحالية. متأكد؟')) {
+                        appData = imported;
+                        saveData();
+                        location.reload();
+                    }
+                } catch (err) {
+                    showToast('ملف غير صالح');
+                }
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+
+        function clearAllData() {
+            if (!confirm('⚠️ سيتم مسح جميع البيانات نهائياً!')) return;
+            if (!confirm('تأكيد نهائي: مسح الفروع والأصناف والعمليات؟')) return;
+            
+            appData.branches = [];
+            appData.items = [];
+            appData.withdrawals = [];
+            saveData();
+            location.reload();
+        }
+
+        // Toast
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Close modal on outside click
+        window.onclick = function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>
